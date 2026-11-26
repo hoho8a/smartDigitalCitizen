@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>똑똑한 디지털 시민</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    background: #eaf6ff; color: #223;
+    user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+    overscroll-behavior: none;
+  }
+  .screen { position: absolute; inset: 0; display: none; flex-direction: column; padding: 2vmin 3vmin; }
+  .screen.active { display: flex; }
+
+  .btn {
+    font: inherit; font-weight: 800; font-size: clamp(20px, 4vmin, 36px);
+    border: none; border-radius: 3vmin; padding: 1.8vmin 5vmin;
+    background: #ff8a3d; color: #fff; box-shadow: 0 1vmin 0 #d96a1f; touch-action: manipulation;
+  }
+  .btn:active { transform: translateY(0.6vmin); box-shadow: 0 0.4vmin 0 #d96a1f; }
+  body.solo .home { display: none; }
+  .home {
+    position: absolute; top: 1.5vmin; right: 2vmin; z-index: 5;
+    font: inherit; font-size: clamp(14px, 2.4vmin, 22px); padding: 0.8vmin 1.6vmin;
+    border: 2px solid #9bb; border-radius: 2vmin; background: #fff; color: #567;
+  }
+
+  .center { align-items: center; justify-content: center; text-align: center; gap: 3vmin; }
+  .big-emoji { font-size: 16vmin; line-height: 1; }
+  h1 { margin: 0; font-size: clamp(32px, 8vmin, 80px); color: #1b5fa8; }
+  .sub { font-size: clamp(20px, 3.8vmin, 38px); color: #456; line-height: 1.5; margin: 0; }
+
+  .top { display: flex; align-items: center; justify-content: space-between; padding-right: 12vmin; }
+  .mtitle { font-size: clamp(22px, 4.4vmin, 44px); font-weight: 900; color: #1b5fa8; margin: 0; }
+  .stars { font-size: clamp(22px, 4vmin, 40px); letter-spacing: 0.4vmin; }
+  .msg {
+    min-height: 8vmin; margin: 1vmin 0; padding: 1.2vmin 2.5vmin;
+    background: #fff; border-radius: 2.5vmin; font-size: clamp(18px, 3.4vmin, 34px);
+    font-weight: 700; display: flex; align-items: center; border: 3px solid #cde;
+  }
+  .msg.ok { border-color: #3bb26b; background: #eafff2; }
+  .msg.no { border-color: #f0a030; background: #fff6e6; }
+
+  /* 도우미 말풍선 */
+  .helper { flex: 1; display: flex; gap: 2.5vmin; align-items: flex-start; min-height: 0; margin-top: 1vmin; }
+  .avatar {
+    flex: none; width: 15vmin; text-align: center; font-weight: 800; font-size: clamp(14px, 2.4vmin, 24px); color: #1b5fa8;
+  }
+  .avatar .face {
+    width: 13vmin; height: 13vmin; margin: 0 auto 0.8vmin; border-radius: 50%;
+    background: linear-gradient(135deg,#7ec8ff,#b49cff); display: flex; align-items: center; justify-content: center;
+    font-size: 7vmin; box-shadow: 0 0.8vmin 0 #8aa7e6;
+  }
+  .bubble {
+    flex: 1; background: #fff; border: 0.7vmin solid #7aa7e0; border-radius: 3vmin; padding: 2vmin;
+    display: flex; flex-direction: column; gap: 1.6vmin; position: relative;
+  }
+  .bubble::before {
+    content: ""; position: absolute; left: -2.6vmin; top: 5vmin; width: 0; height: 0;
+    border: 1.8vmin solid transparent; border-right: 2.6vmin solid #7aa7e0; border-left: 0;
+  }
+  .bubble::after {
+    content: ""; position: absolute; left: -1.7vmin; top: 5.5vmin; width: 0; height: 0;
+    border: 1.3vmin solid transparent; border-right: 2vmin solid #fff; border-left: 0;
+  }
+  .who {
+    align-self: flex-start; background: #7aa7e0; color: #fff; font-weight: 900; border-radius: 2vmin;
+    padding: 0.6vmin 2vmin; font-size: clamp(16px, 2.8vmin, 28px);
+  }
+  .mine { margin-top: 1vmin; padding: 1.6vmin; border-top: 0.5vmin dashed #cfe0f5; text-align: center; }
+  .mine .mt { font-weight: 900; color: #c75a00; font-size: clamp(18px, 3.2vmin, 32px); }
+  .bubble .topic { font-weight: 900; color: #1b5fa8; font-size: clamp(16px, 2.8vmin, 28px); }
+  .bubble .q { font-weight: 900; font-size: clamp(26px, 6vmin, 60px); text-align: center; padding: 2vmin 0; }
+  .sent {
+    font: inherit; text-align: left; font-weight: 700; font-size: clamp(20px, 4vmin, 40px);
+    background: #f4f9ff; border: 0.5vmin solid #cfe0f5; border-radius: 2.2vmin; padding: 2vmin 2.5vmin; color: #223;
+    touch-action: manipulation;
+  }
+  .sent.wrong { background: #ffe9e9; border-color: #e5484d; text-decoration: line-through; text-decoration-color: #e5484d; }
+  .sent.shake, .opt.shake { animation: shake .45s; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-1.4vmin)} 40%{transform:translateX(1.4vmin)} 60%{transform:translateX(-1vmin)} 80%{transform:translateX(1vmin)} }
+
+  .opts { display: flex; gap: 2vmin; flex-wrap: wrap; justify-content: center; margin-top: 1vmin; }
+  .opt {
+    font: inherit; font-weight: 800; font-size: clamp(18px, 3.4vmin, 34px);
+    border: 0.6vmin solid; border-radius: 2.5vmin; padding: 2vmin 3vmin; background: #fff; touch-action: manipulation;
+    min-width: 22vmin;
+  }
+  .opt.green  { border-color: #3bb26b; color: #1f8a4c; background: #effcf4; }
+  .opt.yellow { border-color: #f2b600; color: #a37800; background: #fffbe6; }
+  .opt.red    { border-color: #e5484d; color: #c0282d; background: #fff0f0; }
+  .opt.blue   { border-color: #5b8ee6; color: #1b5fa8; background: #eef4ff; }
+
+  .bubble { max-height: 100%; }
+  .bscroll { display: flex; flex-direction: column; gap: 1.6vmin; overflow-y: auto; min-height: 0; flex: 1; }
+  .next { position: static; align-self: center; flex: none; margin-top: 0.5vmin; display: none; }
+  .next.show { display: block; animation: pop .4s; }
+  @keyframes pop { 0%{transform:scale(.6)} 70%{transform:scale(1.1)} 100%{transform:scale(1)} }
+
+  .why {
+    position: absolute; inset: 0; background: rgba(255,255,255,.96); border-radius: 3vmin; display: none;
+    flex-direction: column; align-items: center; justify-content: center; gap: 2vmin; text-align: center; padding: 3vmin;
+  }
+  .why.show { display: flex; }
+  .why .wt { font-size: clamp(26px, 5.6vmin, 56px); font-weight: 900; color: #1b5fa8; }
+  .why .wb { font-size: clamp(20px, 4vmin, 40px); font-weight: 700; line-height: 1.5; }
+
+  /* 약속 도장 */
+  .promises { flex: 1; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2.5vmin; margin-top: 2vmin; min-height: 0; }
+  .promise {
+    position: relative; background: #fff; border: 0.8vmin solid #7aa7e0; border-radius: 3vmin;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1vmin;
+    font-weight: 900; font-size: clamp(20px, 4vmin, 40px); text-align: center; padding: 2vmin;
+    touch-action: manipulation; cursor: pointer;
+  }
+  .promise .pe { font-size: clamp(40px, 10vmin, 100px); }
+  .promise .pd { font-size: clamp(15px, 2.8vmin, 28px); font-weight: 700; color: #567; }
+  .promise .stamp {
+    position: absolute; right: 2vmin; bottom: 1.5vmin; width: clamp(70px, 16vmin, 150px); height: clamp(70px, 16vmin, 150px);
+    border-radius: 50%; border: 0.9vmin double #e5484d; color: #e5484d; background: rgba(255,255,255,.75);
+    display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: clamp(18px, 3.8vmin, 38px);
+    opacity: 0; transform: scale(2.4) rotate(-20deg);
+  }
+  .promise.done { border-color: #3bb26b; background: #effcf4; }
+  .promise.done .stamp { opacity: 1; transform: scale(1) rotate(-12deg); transition: all .3s cubic-bezier(.3,1.6,.5,1); }
+  .hint { text-align: center; font-size: clamp(16px, 3vmin, 30px); color: #567; margin: 0.5vmin 0; }
+
+  .confetti { position: fixed; top: -8vmin; font-size: 6vmin; z-index: 200; pointer-events: none; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(115vh) rotate(540deg); } }
+  #s-done { color: #fff; }
+  #s-done.c1 { background: #2e9d5f; }
+  #s-done.c2 { background: #3f78d8; }
+  #s-done.c3 { background: #f07a1f; }
+  .badge { background: #fff; border: 1vmin solid #ffb703; border-radius: 6vmin; padding: 4vmin 8vmin; box-shadow: 0 1.5vmin 0 #e09500; }
+</style>
+</head>
+<body>
+
+<section class="screen center active" id="s-start">
+  <div class="big-emoji">🤖🛡️</div>
+  <h1>똑똑한 디지털 시민</h1>
+  <p class="sub">AI도 가끔 실수해요.<br>AI는 도우미, 결정은 내가 해요!</p>
+  <button class="btn" id="start-btn" data-go="m1" style="display:none">시작하기 ▶</button>
+  <p class="sub" id="start-wait" style="margin-top:3vmin">⏳ 선생님이 알려 줄 때까지 기다려요!</p>
+</section>
+
+<section class="screen" id="s-m1">
+  <button class="home" data-home>처음으로</button>
+  <div class="top"><h2 class="mtitle">미션 1 · 틀린 곳을 찾아라!</h2><div class="stars" id="m1-stars"></div></div>
+  <div class="msg" id="m1-msg"></div>
+  <div class="helper">
+    <div class="avatar"><div class="face">🤖</div>AI 도우미</div>
+    <div class="bubble" id="m1-bubble">
+      <div class="who">🤖 AI 도우미가 이렇게 말했어요</div>
+      <div class="bscroll">
+        <div class="topic" id="m1-topic"></div>
+        <div id="m1-sents" style="display:flex;flex-direction:column;gap:1.6vmin"></div>
+        <div class="opts" id="m1-opts"></div>
+      </div>
+      <button class="btn next" id="m1-next">다음 ▶</button>
+      <div class="why" id="m1-why">
+        <div class="wt">📚 왜 틀릴 때가 있을까요?</div>
+        <div class="wb">AI 도우미는 많이 본 것을 배워서 말해요.<br>못 본 것이나 잘못 배운 것은 틀릴 수 있어요.<br>그래서 확인이 필요해요!</div>
+        <button class="btn" id="m1-finish">끝! ▶</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="screen" id="s-m2">
+  <button class="home" data-home>처음으로</button>
+  <div class="top"><h2 class="mtitle">미션 2 · 도우미가 물어봐요</h2><div class="stars" id="m2-stars"></div></div>
+  <div class="msg" id="m2-msg"></div>
+  <div class="helper">
+    <div class="avatar"><div class="face">🤖</div>AI 도우미</div>
+    <div class="bubble">
+      <div class="who">🤖 AI 도우미가 물어봐요</div>
+      <div class="bscroll">
+      <div class="q" id="m2-q"></div>
+      <div class="mine">
+        <div class="mt">🙋 나는 어떻게 할까요? <span id="m2-prompt"></span></div>
+        <div class="opts">
+          <button class="opt green" data-ans="g">🟢 해도 돼요</button>
+          <button class="opt yellow" data-ans="y">🟡 어른께 물어봐요</button>
+          <button class="opt red" data-ans="r">🔴 하지 않아요</button>
+        </div>
+      </div>
+      </div>
+      <button class="btn next" id="m2-next">다음 ▶</button>
+    </div>
+  </div>
+</section>
+
+<section class="screen" id="s-m3">
+  <button class="home" data-home>처음으로</button>
+  <div class="top"><h2 class="mtitle">미션 3 · 약속 도장 꾹!</h2><div class="stars" id="m3-stars">☆☆☆</div></div>
+  <p class="hint">AI는 도우미, 결정은 내가! 약속을 읽고 눌러서 도장을 찍어요</p>
+  <div class="promises" id="promises"></div>
+</section>
+
+<section class="screen center" id="s-done">
+  <div id="done-title" style="font-size:clamp(20px,7vmin,80px);font-weight:900;line-height:1.1;opacity:.95">미션 1 완료!</div>
+  <div class="big-emoji" id="done-emoji" style="font-size:11vmin;margin:.5vmin 0">🔍</div>
+  <div id="done-msg" style="font-size:clamp(28px,11.5vmin,150px);font-weight:900;line-height:1.15;white-space:pre-line;word-break:keep-all;text-shadow:0 .6vmin 0 rgba(0,0,0,.18)"></div>
+  <p class="sub" id="done-sub" style="color:#fff;font-weight:800;margin-top:2vmin;font-size:clamp(14px,3.2vmin,32px)"></p>
+</section>
+
+<section class="screen center" id="s-end">
+  <div class="badge">
+    <div class="big-emoji">🏅</div>
+    <h1>똑똑한 디지털 시민!</h1>
+    <p class="sub" style="margin-top:2vmin">AI는 도우미, 결정은 내가 해요 🙌</p>
+  </div>
+  <p class="sub">선생님께 이 화면을 보여 주세요</p>
+</section>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- 데이터 ---------- */
+  // 연습 문제: 아이들에게 "연습용으로 만든 예시"임을 알려 주세요.
+  var ROUNDS = [
+    { topic: "🐾 동물 이야기", sents: ["토끼는 귀가 길어요.", "고양이는 야옹 하고 울어요.", "강아지는 날개로 하늘을 날아요."], wrong: 2, fix: "강아지는 날개가 없어요. 땅에서 걸어 다녀요." },
+    { topic: "🌸 계절 이야기", sents: ["봄에는 꽃이 피어요.", "여름에는 눈사람을 만들어요.", "겨울에는 눈이 올 때가 있어요."], wrong: 1, fix: "여름은 더워서 눈사람을 만들기 어려워요." },
+    { topic: "👂 우리 몸 이야기", sents: ["코로 냄새를 맡아요.", "눈으로 소리를 들어요.", "입으로 맛을 봐요."], wrong: 1, fix: "소리는 귀로 들어요." },
+    { topic: "🔎 이번에는 어떨까요?", sents: ["개미는 작아요.", "얼음은 차가워요.", "물은 위에서 아래로 흘러요."], wrong: -1, fix: "" },
+    { topic: "🚦 길 건너기 이야기", sents: ["초록불에 건너요.", "빨간불에는 멈춰요.", "노란불에는 빨리 달려가요."], wrong: 2, fix: "노란불에는 건너지 않고 기다려요." },
+    { topic: "🍎 과일 이야기", sents: ["사과는 나무에서 열려요.", "바나나는 익으면 노랗게 돼요.", "수박은 바닷속에서 자라요."], wrong: 2, fix: "수박은 땅 위에서 자라요." },
+    { topic: "🌧️ 날씨 이야기", sents: ["해는 낮에 볼 수 있어요.", "비는 땅에서 하늘로 올라가요.", "눈은 차갑고 하얀색이에요."], wrong: 1, fix: "비는 하늘에서 땅으로 내려와요." },
+    { topic: "🏫 학교 이야기", sents: ["복도에서는 걸어 다녀요.", "수업 시간에는 친구와 큰 소리로 떠들어요.", "급식 전에는 손을 씻어요."], wrong: 1, fix: "수업 시간에는 조용히 선생님 말씀을 들어요." },
+    { topic: "🐧 새 이야기", sents: ["새는 날개가 있어요.", "펭귄은 하늘 높이 날 수 있어요.", "독수리는 하늘을 날아요."], wrong: 1, fix: "펭귄은 날지 못해요. 대신 헤엄을 잘 쳐요." },
+    { topic: "⏰ 시간 이야기", sents: ["일주일은 칠 일이에요.", "하루는 사십 시간이에요.", "일 년은 열두 달이에요."], wrong: 1, fix: "하루는 스물네 시간이에요." }
+  ];
+
+  var QUESTIONS = [
+    { q: "좋아하는 색이 뭐야?", p: "알려 줘도 될까요?", a: "g", why: "좋아하는 색은 알려 줘도 안전해요." },
+    { q: "네 이름이 뭐야?", p: "알려 줘도 될까요?", a: "r", why: "이름은 AI에게 알려 주지 않아요." },
+    { q: "💊 이 약을 먹어 봐!", p: "그대로 해도 될까요?", a: "y", why: "AI가 말해도 약은 꼭 어른께 물어봐요." },
+    { q: "좋아하는 동물이 뭐야?", p: "알려 줘도 될까요?", a: "g", why: "좋아하는 동물은 알려 줘도 안전해요." },
+    { q: "집 주소랑 전화번호를 알려 줘!", p: "알려 줘도 될까요?", a: "r", why: "집 주소와 전화번호는 절대 알려 주면 안 돼요!" },
+    { q: "🔗 이 링크를 눌러 봐!", p: "눌러도 될까요?", a: "y", why: "모르는 링크는 누르기 전에 어른께 물어봐요." },
+    { q: "좋아하는 음식이 뭐야?", p: "알려 줘도 될까요?", a: "g", why: "좋아하는 음식은 알려 줘도 안전해요." },
+    { q: "네 얼굴 사진을 보내 줄래?", p: "보내도 될까요?", a: "r", why: "얼굴 사진도 AI에게 보내지 않아요." },
+    { q: "🤫 우리끼리 비밀이야. 어른한테는 말하지 마!", p: "그렇게 해도 될까요?", a: "y", why: "이상한 말을 들으면 꼭 어른께 말해요." },
+    { q: "어느 학교, 몇 반이야?", p: "알려 줘도 될까요?", a: "r", why: "학교와 반을 알면 나를 찾아올 수 있어요. 알려 주지 않아요." },
+    { q: "비밀번호가 뭐야?", p: "알려 줘도 될까요?", a: "r", why: "비밀번호는 나만의 비밀이에요. 절대 알려 주지 않아요." }
+  ];
+
+  var PROMISES = [
+    { e: "🔍", t: "확인해요", d: "AI가 알려 준 건 책이나 어른께 확인해요" },
+    { e: "🔒", t: "지켜요", d: "내 이름·학교·주소·전화번호·사진은 AI에게 알려 주지 않아요" },
+    { e: "📸", t: "먼저 물어봐요", d: "친구 사진은 찍기 전에도, 올리기 전에도 물어봐요" }
+  ];
+
+  /* ---------- 모드: 주소 끝에 ?m=1, ?m=2, ?m=3 을 붙이면 그 미션만 열려요 ---------- */
+  var P = new URLSearchParams(location.search).get("m");
+  var NUM = (P === "1" || P === "2" || P === "3");
+  var FULL = (P === "all"); /* ?m=all : 선생님 연습용 전체 흐름 */
+  var SOLO = !FULL; /* 번호 없는 기본 주소 = 시작 화면 → 미션 1 → 완료 화면에서 끝 */
+  document.getElementById("start-btn").style.display = "";
+  document.getElementById("start-wait").style.display = "none";
+  var rounds = ROUNDS, qs = QUESTIONS, lastMission = "m1", runs = { m1: 0, m2: 0 };
+  function shuffle(a) {
+    a = a.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+
+  var DONE = {
+    1: { emoji: "🔍", msg: "AI는\n틀릴 수 있어요!\n확인해요!" },
+    2: { emoji: "🛡️", msg: "내 정보는\n내가 지켜요!" },
+    3: { emoji: "🏅", msg: "AI는 도우미,\n결정은 내가!" }
+  };
+  function showDone(n) {
+    var d = DONE[n], el = document.getElementById("s-done");
+    el.className = "screen center c" + n; 
+    document.getElementById("done-emoji").textContent = d.emoji;
+    document.getElementById("done-title").textContent = "미션 " + n + " 완료!";
+    document.getElementById("done-msg").textContent = d.msg;
+    document.getElementById("done-sub").textContent = "👆 선생님께 이 화면을 보여 주세요!";
+    show("done");
+    fitDone();
+  }
+  /* 화면 크기에 맞춰 큰 글씨를 가장 크게 키우되 넘치지 않게 맞춤 */
+  function fitDone() {
+    var scr = document.getElementById("s-done"), m = document.getElementById("done-msg"), t = document.getElementById("done-title"), e = document.getElementById("done-emoji"), sub = document.getElementById("done-sub");
+    var H = window.innerHeight, W = window.innerWidth, base = Math.min(H, W);
+    t.style.fontSize = Math.max(18, Math.min(base * 0.07, 80)) + "px";
+    e.style.fontSize = Math.max(24, base * 0.11) + "px";
+    sub.style.fontSize = Math.max(14, Math.min(base * 0.035, 32)) + "px";
+    function fits() {
+      var kids = [t, e, m, sub], top = 1e9, bot = 0, right = 0, i, r;
+      for (i = 0; i < kids.length; i++) { r = kids[i].getBoundingClientRect(); top = Math.min(top, r.top); bot = Math.max(bot, r.bottom); right = Math.max(right, r.right); }
+      return top >= H * 0.02 && bot <= H * 0.98 && right <= W * 0.97 && m.scrollWidth <= W * 0.95;
+    }
+    var lo = 20, hi = 300, mid;
+    while (hi - lo > 2) { mid = (lo + hi) / 2; m.style.fontSize = mid + "px"; if (fits()) lo = mid; else hi = mid; }
+    m.style.fontSize = lo + "px";
+  }
+  window.addEventListener("resize", function () { if (document.getElementById("s-done").classList.contains("active")) fitDone(); });
+
+  /* ---------- 공통 ---------- */
+  var screens = document.querySelectorAll(".screen");
+  function $(id) { return document.getElementById(id); }
+  function show(id) {
+    for (var i = 0; i < screens.length; i++) screens[i].classList.remove("active");
+    $("s-" + id).classList.add("active");
+    if (id === "m1") startM1();
+    if (id === "m2") startM2();
+    if (id === "m3") startM3();
+    if (id === "end") confetti();
+  }
+  document.addEventListener("click", function (e) {
+    var go = e.target.closest("[data-go]");
+    if (go) { show(go.getAttribute("data-go")); return; }
+    if (e.target.closest("[data-home]") && window.confirm("처음으로 돌아갈까요?")) { if (SOLO) location.reload(); else show("start"); }
+  });
+  document.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+
+  function stars(el, done, total) {
+    var s = ""; for (var i = 0; i < total; i++) s += i < done ? "⭐" : "☆"; el.textContent = s;
+  }
+  function say(el, text, kind) { el.className = "msg" + (kind ? " " + kind : ""); el.textContent = text; }
+  function shake(el) { el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); }
+  function confetti() {
+    var em = ["🎉", "⭐", "✨", "🎊", "💛"];
+    for (var i = 0; i < 28; i++) {
+      var s = document.createElement("span");
+      s.className = "confetti"; s.textContent = em[i % em.length];
+      s.style.left = Math.random() * 100 + "vw";
+      s.style.animationDuration = (2 + Math.random() * 2) + "s";
+      s.style.animationDelay = (Math.random() * 0.6) + "s";
+      document.body.appendChild(s);
+      (function (n) { setTimeout(function () { n.remove(); }, 5000); })(s);
+    }
+  }
+
+  /* ---------- 미션 1: 틀린 곳 찾기 ---------- */
+  var r = 0, stage = "find";
+  function startM1() { lastMission = "m1"; rounds = runs.m1++ > 0 ? shuffle(ROUNDS) : ROUNDS; r = 0; renderRound(); }
+  function renderRound() {
+    var R = rounds[r];
+    stage = "find";
+    stars($("m1-stars"), r, rounds.length);
+    $("m1-why").classList.remove("show");
+    $("m1-next").classList.remove("show");
+    $("m1-topic").textContent = R.topic;
+    $("m1-opts").innerHTML = "";
+    var box = $("m1-sents"); box.innerHTML = "";
+    if (R.wrong >= 0) {
+      say($("m1-msg"), "AI 도우미가 말했어요. 틀린 말을 찾아서 눌러요! (연습 문제예요)");
+    } else {
+      say($("m1-msg"), "이번에는 어떨까요? 읽어 보고 골라요.");
+    }
+    R.sents.forEach(function (t, i) {
+      var b = document.createElement("button");
+      b.className = "sent"; b.textContent = (i + 1) + ". " + t;
+      b.addEventListener("click", function () { onSent(i, b); });
+      box.appendChild(b);
+    });
+    if (R.wrong < 0) {
+      var o = $("m1-opts");
+      o.innerHTML = '<button class="opt blue" data-all="n">🔍 틀린 곳이 있어요</button><button class="opt green" data-all="y">✅ 모두 맞아요</button>';
+      Array.prototype.forEach.call(o.querySelectorAll(".opt"), function (b) {
+        b.addEventListener("click", function () { onAll(b); });
+      });
+    }
+  }
+  function finishRound() {
+    stars($("m1-stars"), r + 1, rounds.length);
+    if (r === rounds.length - 1) {
+      confetti();
+      setTimeout(function () { $("m1-why").classList.add("show"); }, 1400);
+    } else {
+      $("m1-next").classList.add("show");
+    }
+  }
+  function onSent(i, btn) {
+    var R = rounds[r];
+    if (stage !== "find" || R.wrong < 0) return;
+    if (i === R.wrong) {
+      stage = "check";
+      btn.classList.add("wrong");
+      say($("m1-msg"), "어, 틀렸네! 🔍 " + R.fix, "ok");
+      var o = $("m1-opts");
+      o.innerHTML = '<div class="hint" style="width:100%;font-weight:800">AI가 틀렸어요. 어떻게 확인할까요?</div>' +
+        '<button class="opt blue" data-chk="1">📖 책에서 찾아봐요</button>' +
+        '<button class="opt blue" data-chk="1">👩‍🏫 어른께 물어봐요</button>' +
+        '<button class="opt red" data-chk="0">😌 그냥 믿어요</button>';
+      Array.prototype.forEach.call(o.querySelectorAll(".opt"), function (b) {
+        b.addEventListener("click", function () { onCheck(b); });
+      });
+    } else {
+      shake(btn);
+      say($("m1-msg"), "이 말은 맞아요. 다른 말을 찾아볼까요? 🤔", "no");
+    }
+  }
+  function onCheck(b) {
+    if (stage !== "check") return;
+    if (b.getAttribute("data-chk") === "1") {
+      stage = "done";
+      say($("m1-msg"), "좋아요! AI가 알려 줘도 확인하면 안전해요. 👍", "ok");
+      finishRound();
+    } else {
+      shake(b);
+      say($("m1-msg"), "틀린 말을 그냥 믿으면 곤란해요. 다시 골라 볼까요?", "no");
+    }
+  }
+  function onAll(b) {
+    if (stage !== "find") return;
+    if (b.getAttribute("data-all") === "y") {
+      stage = "done";
+      say($("m1-msg"), "맞아요! AI도 맞을 때가 많아요. 그래도 중요한 건 확인해요. 👍", "ok");
+      finishRound();
+    } else {
+      shake(b);
+      say($("m1-msg"), "다시 한번 천천히 읽어 볼까요? 🤔", "no");
+    }
+  }
+  $("m1-next").addEventListener("click", function () { r++; renderRound(); });
+  $("m1-finish").addEventListener("click", function () { if (SOLO) { showDone(1); confetti(); } else show("m2"); });
+
+  /* ---------- 미션 2: 도우미가 물어봐요 ---------- */
+  var q = 0, locked = false;
+  function startM2() { lastMission = "m2"; qs = runs.m2++ > 0 ? shuffle(QUESTIONS) : QUESTIONS; q = 0; renderQ(); }
+  function renderQ() {
+    var Q = qs[q]; locked = false;
+    stars($("m2-stars"), q, qs.length);
+    $("m2-q").textContent = Q.q;
+    $("m2-prompt").textContent = Q.p;
+    $("m2-next").classList.remove("show");
+    $("m2-next").textContent = q === qs.length - 1 ? (SOLO ? "끝! ▶" : "약속 도장 찍으러 가기 ▶") : "다음 ▶";
+    say($("m2-msg"), "AI 도우미가 나에게 물어봐요. 내가 정해요!");
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("#s-m2 .opt"), function (b) {
+    b.addEventListener("click", function () {
+      if (locked) return;
+      var Q = qs[q];
+      if (b.getAttribute("data-ans") === Q.a) {
+        locked = true;
+        say($("m2-msg"), "✅ " + Q.why, "ok");
+        stars($("m2-stars"), q + 1, qs.length);
+        $("m2-next").classList.add("show");
+      } else {
+        shake(b);
+        say($("m2-msg"), "다시 생각해 볼까요? 🤔", "no");
+      }
+    });
+  });
+  $("m2-next").addEventListener("click", function () {
+    if (q === qs.length - 1) { confetti(); if (SOLO) showDone(2); else show("m3"); } else { q++; renderQ(); }
+  });
+
+  /* ---------- 미션 3: 약속 도장 ---------- */
+  function startM3() {
+    var box = $("promises"), done = 0;
+    box.innerHTML = "";
+    stars($("m3-stars"), 0, PROMISES.length);
+    PROMISES.forEach(function (p) {
+      var d = document.createElement("div");
+      d.className = "promise";
+      d.innerHTML = '<div class="pe">' + p.e + '</div><div>' + p.t + '</div><div class="pd">' + p.d + '</div><div class="stamp">약속!</div>';
+      d.addEventListener("click", function () {
+        if (d.classList.contains("done")) return;
+        d.classList.add("done"); done++; stars($("m3-stars"), done, PROMISES.length);
+        if (done === PROMISES.length) setTimeout(function () { if (SOLO) { showDone(3); confetti(); } else show("end"); }, 700);
+      });
+      box.appendChild(d);
+    });
+  }
+
+  if (SOLO) { document.body.classList.add("solo"); if (NUM) show("m" + P); }
+})();
+</script>
+</body>
+</html>
