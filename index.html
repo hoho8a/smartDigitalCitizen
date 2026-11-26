@@ -143,7 +143,7 @@
 <section class="screen center active" id="s-start">
   <div class="big-emoji">🤖🛡️</div>
   <h1>똑똑한 디지털 시민</h1>
-  <p class="sub">AI도 가끔 실수해요.<br>AI는 도우미, 결정은 내가 해요!</p>
+  <p class="sub">AI도 가끔 실수해요.<br>AI는 도우미, 주인은 나예요!</p>
   <button class="btn" id="start-btn" data-go="m1" style="display:none">시작하기 ▶</button>
   <p class="sub" id="start-wait" style="margin-top:3vmin">⏳ 선생님이 알려 줄 때까지 기다려요!</p>
 </section>
@@ -198,7 +198,7 @@
 <section class="screen" id="s-m3">
   <button class="home" data-home>처음으로</button>
   <div class="top"><h2 class="mtitle">미션 3 · 약속 도장 꾹!</h2><div class="stars" id="m3-stars">☆☆☆</div></div>
-  <p class="hint">AI는 도우미, 결정은 내가! 약속을 읽고 눌러서 도장을 찍어요</p>
+  <p class="hint">AI는 도우미, 주인은 나! 약속을 읽고 눌러서 도장을 찍어요</p>
   <div class="promises" id="promises"></div>
 </section>
 
@@ -213,7 +213,7 @@
   <div class="badge">
     <div class="big-emoji">🏅</div>
     <h1>똑똑한 디지털 시민!</h1>
-    <p class="sub" style="margin-top:2vmin">AI는 도우미, 결정은 내가 해요 🙌</p>
+    <p class="sub" style="margin-top:2vmin">AI는 도우미, 주인은 나예요 🙌</p>
   </div>
   <p class="sub">선생님께 이 화면을 보여 주세요</p>
 </section>
@@ -226,15 +226,15 @@
   // 연습 문제: 아이들에게 "연습용으로 만든 예시"임을 알려 주세요.
   var ROUNDS = [
     { topic: "🐾 동물 이야기", sents: ["토끼는 귀가 길어요.", "고양이는 야옹 하고 울어요.", "강아지는 날개로 하늘을 날아요."], wrong: 2, fix: "강아지는 날개가 없어요. 땅에서 걸어 다녀요." },
-    { topic: "🌸 계절 이야기", sents: ["봄에는 꽃이 피어요.", "여름에는 눈사람을 만들어요.", "겨울에는 눈이 올 때가 있어요."], wrong: 1, fix: "여름은 더워서 눈사람을 만들기 어려워요." },
+    { topic: "🌙 달 이야기", sents: ["달은 밤하늘에서 볼 수 있어요.", "달은 스스로 빛을 내요.", "달은 모양이 바뀌어 보여요."], wrong: 1, fix: "달은 햇빛을 받아서 밝게 보여요." },
     { topic: "👂 우리 몸 이야기", sents: ["코로 냄새를 맡아요.", "눈으로 소리를 들어요.", "입으로 맛을 봐요."], wrong: 1, fix: "소리는 귀로 들어요." },
     { topic: "🔎 이번에는 어떨까요?", sents: ["개미는 작아요.", "얼음은 차가워요.", "물은 위에서 아래로 흘러요."], wrong: -1, fix: "" },
     { topic: "🚦 길 건너기 이야기", sents: ["초록불에 건너요.", "빨간불에는 멈춰요.", "노란불에는 빨리 달려가요."], wrong: 2, fix: "노란불에는 건너지 않고 기다려요." },
-    { topic: "🍎 과일 이야기", sents: ["사과는 나무에서 열려요.", "바나나는 익으면 노랗게 돼요.", "수박은 바닷속에서 자라요."], wrong: 2, fix: "수박은 땅 위에서 자라요." },
+    { topic: "🐋 바다 이야기", sents: ["고래는 바다에 살아요.", "고래는 물고기예요.", "고래는 아주 커요."], wrong: 1, fix: "고래는 물고기가 아니에요. 새끼에게 젖을 먹여요." },
     { topic: "🌧️ 날씨 이야기", sents: ["해는 낮에 볼 수 있어요.", "비는 땅에서 하늘로 올라가요.", "눈은 차갑고 하얀색이에요."], wrong: 1, fix: "비는 하늘에서 땅으로 내려와요." },
     { topic: "🏫 학교 이야기", sents: ["복도에서는 걸어 다녀요.", "수업 시간에는 친구와 큰 소리로 떠들어요.", "급식 전에는 손을 씻어요."], wrong: 1, fix: "수업 시간에는 조용히 선생님 말씀을 들어요." },
     { topic: "🐧 새 이야기", sents: ["새는 날개가 있어요.", "펭귄은 하늘 높이 날 수 있어요.", "독수리는 하늘을 날아요."], wrong: 1, fix: "펭귄은 날지 못해요. 대신 헤엄을 잘 쳐요." },
-    { topic: "⏰ 시간 이야기", sents: ["일주일은 칠 일이에요.", "하루는 사십 시간이에요.", "일 년은 열두 달이에요."], wrong: 1, fix: "하루는 스물네 시간이에요." }
+    { topic: "🐾 작은 동물 이야기", sents: ["거미는 거미줄을 만들어요.", "거미는 곤충이에요.", "거미는 다리가 여덟 개예요."], wrong: 1, fix: "거미는 다리가 여덟 개라서 곤충이 아니에요." }
   ];
 
   var QUESTIONS = [
@@ -274,7 +274,7 @@
   var DONE = {
     1: { emoji: "🔍", msg: "AI는\n틀릴 수 있어요!\n확인해요!" },
     2: { emoji: "🛡️", msg: "내 정보는\n내가 지켜요!" },
-    3: { emoji: "🏅", msg: "AI는 도우미,\n결정은 내가!" }
+    3: { emoji: "🏅", msg: "AI는 도우미,\n주인은 나!" }
   };
   function showDone(n) {
     var d = DONE[n], el = document.getElementById("s-done");
