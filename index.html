@@ -173,7 +173,7 @@
 
 <section class="screen" id="s-m2">
   <button class="home" data-home>처음으로</button>
-  <div class="top"><h2 class="mtitle">미션 2 · 도우미가 물어봐요</h2><div class="stars" id="m2-stars"></div></div>
+  <div class="top"><h2 class="mtitle">미션 3 · 도우미가 물어봐요</h2><div class="stars" id="m2-stars"></div></div>
   <div class="msg" id="m2-msg"></div>
   <div class="helper">
     <div class="avatar"><div class="face">🤖</div>AI 도우미</div>
@@ -197,7 +197,7 @@
 
 <section class="screen" id="s-m3">
   <button class="home" data-home>처음으로</button>
-  <div class="top"><h2 class="mtitle">미션 3 · 약속 도장 꾹!</h2><div class="stars" id="m3-stars">☆☆☆</div></div>
+  <div class="top"><h2 class="mtitle">미션 5 · 약속 도장 꾹!</h2><div class="stars" id="m3-stars">☆☆☆</div></div>
   <p class="hint">AI는 도우미, 주인은 나! 약속을 읽고 눌러서 도장을 찍어요</p>
   <div class="promises" id="promises"></div>
 </section>
@@ -280,7 +280,7 @@
     var d = DONE[n], el = document.getElementById("s-done");
     el.className = "screen center c" + n; 
     document.getElementById("done-emoji").textContent = d.emoji;
-    document.getElementById("done-title").textContent = "미션 " + n + " 완료!";
+    document.getElementById("done-title").textContent = "미션 " + ({ 1: 1, 2: 3, 3: 5 })[n] + " 완료!"; /* 발표자료 번호에 맞춤: 도우미 질문=미션3, 약속 도장=미션5 */
     document.getElementById("done-msg").textContent = d.msg;
     document.getElementById("done-sub").textContent = "👆 선생님께 이 화면을 보여 주세요!";
     show("done");
